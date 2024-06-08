@@ -31,52 +31,101 @@ fun Application.configureDatabases() {
     routing {
         get("/bus") {
             val license = call.request.queryParameters["license"]
+
+            val buses = busService.readBuses(license)
+
+            call.respond(HttpStatusCode.OK, buses)
+        }
+
+        get("/simple_bus") {
+            val drivingDate = call.request.queryParameters["drivingDate"]
+            val departureTime = call.request.queryParameters["departureTime"]
             val routeNumber = call.request.queryParameters["routeNumber"]
+            val outboundReturn = call.request.queryParameters["outboundReturn"]
 
-            if (license != null && routeNumber != null) {
-                call.respond(HttpStatusCode.BadRequest, "Expects either query parameter license or routeNumber not null")
-            } else if (license != null) {
-                val bus = busService.read(license)
+            val buses = busService.readSimpleBuses(
+                drivingDate,
+                departureTime,
+                routeNumber,
+                outboundReturn?.let(OutboundReturnType::valueOf)
+            )
 
-                if (bus != null) {
-                    call.respond(HttpStatusCode.OK, bus)
-                } else {
-                    call.respond(HttpStatusCode.NotFound)
-                }
-            } else if (routeNumber != null) {
-                val buses = busService.readByRouteNumber(routeNumber)
+            call.respond(HttpStatusCode.OK, buses)
+        }
 
-                call.respond(HttpStatusCode.OK, buses)
-            } else {
-                call.respond(HttpStatusCode.BadRequest, "Expects query parameter license or routeNumber")
-            }
+        get("/full_bus") {
+            val drivingDate = call.request.queryParameters["drivingDate"]
+            val departureTime = call.request.queryParameters["departureTime"]
+            val routeNumber = call.request.queryParameters["routeNumber"]
+            val outboundReturn = call.request.queryParameters["outboundReturn"]
+
+            val buses = actualFrequencyService.readBusByActualFrequency(
+                drivingDate,
+                departureTime,
+                routeNumber,
+                outboundReturn?.let(OutboundReturnType::valueOf)
+            )
+
+            call.respond(HttpStatusCode.OK, buses)
         }
 
         get("/route") {
-            val stationNamePattern =
-                call.request.queryParameters["stationNamePattern"]
+            val routeNumber = call.request.queryParameters["routeNumber"]
+            val startStationNamePattern = call.request.queryParameters["startStation"]
+            val dockStationNamePattern = call.request.queryParameters["dockStation"]
+            val endStationNamePattern = call.request.queryParameters["endStation"]
 
-            if (stationNamePattern != null) {
-                val routes = routeService.readByStationName(stationNamePattern)
+            val routes = routeService.readRoutes(
+                routeNumber,
+                startStationNamePattern,
+                dockStationNamePattern,
+                endStationNamePattern
+            )
 
-                call.respond(HttpStatusCode.OK, routes)
-            } else {
-                call.respond(HttpStatusCode.BadRequest, "Expects query parameter stationNamePattern")
-            }
+            call.respond(HttpStatusCode.OK, routes)
         }
 
         get("/historical_arrival") {
             val routeNumber = call.request.queryParameters["routeNumber"]
-            val drivingDate = call.request.queryParameters["drivingDate"]?.let(kotlinx.datetime.LocalDate::parse)
+            val drivingDate = call.request.queryParameters["drivingDate"]
+            val outboundReturn = call.request.queryParameters["outboundReturn"]
 
-            if (routeNumber == null) {
-                call.respond(HttpStatusCode.BadRequest, "Expects query parameter routeNumber not null ")
-                return@get
-            }
 
-            val historicalArrivals = historicalArrivalService.readHistoricalArrivalsByRouteAndDate(routeNumber, drivingDate)
+            val historicalArrivals = historicalArrivalService.readHistoricalArrivals(
+                routeNumber,
+                drivingDate,
+                outboundReturn?.let(OutboundReturnType::valueOf)
+            )
 
             call.respond(HttpStatusCode.OK, historicalArrivals)
+        }
+
+        get("/actual_frequency") {
+            val routeNumber = call.request.queryParameters["routeNumber"]
+            val outboundReturn = call.request.queryParameters["outboundReturn"]
+            val drivingWeek = call.request.queryParameters["drivingWeek"]
+
+            val actualFrequencies = actualFrequencyService.readActualFrequencies(
+                routeNumber,
+                outboundReturn?.let(OutboundReturnType::valueOf),
+                drivingWeek
+            )
+
+            call.respond(HttpStatusCode.OK, actualFrequencies)
+        }
+
+        get("/station") {
+            val stationName = call.request.queryParameters["stationName"]
+            val routeNumber = call.request.queryParameters["routeNumber"]
+            val outboundReturn = call.request.queryParameters["outboundReturn"]
+
+            val station = stationService.readStations(
+                stationName,
+                routeNumber,
+                outboundReturn?.let(OutboundReturnType::valueOf)
+            )
+
+            call.respond(HttpStatusCode.OK, station)
         }
     }
 }

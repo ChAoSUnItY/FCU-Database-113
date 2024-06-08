@@ -1,9 +1,15 @@
 package chaosunity.github.io.plugins.schema
 
+import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.kotlin.datetime.date
 import org.jetbrains.exposed.sql.kotlin.datetime.time
+
+@Serializable
+data class ExposedAppointmentForm(
+    val appointmentFormId: String,
+)
 
 class AppointmentFormService(database: Database) : ServiceBase(database, AppointmentForms) {
     object AppointmentForms : Table("AppointmentForms") {

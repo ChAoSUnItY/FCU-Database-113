@@ -3,12 +3,9 @@ package chaosunity.github.io.plugins.schema
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import kotlinx.serialization.Serializable
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.kotlin.datetime.date
 import org.jetbrains.exposed.sql.kotlin.datetime.time
-import org.jetbrains.exposed.sql.selectAll
 
 @Serializable
 data class ExposedHistoricalArrival(
@@ -24,7 +21,27 @@ data class ExposedHistoricalArrival(
 )
 
 class HistoricalArrivalService(database: Database) : ServiceBase(database, HistoricalArrivals) {
-    object HistoricalArrivals : Table() {
+    companion object {
+        fun historicalArrivalSelectorBuilder(
+            routeNumber: String?,
+            drivingDate: String?,
+            outboundReturn: OutboundReturnType?
+        ): String {
+            val routeNumberExpr = routeNumber.buildConditionalExpr { "route_number = \"$it\"" }
+            val drivingDateExpr = drivingDate.buildConditionalExpr { "driving_date = \"$it\"" }
+            val outboundReturnExpr = outboundReturn.buildConditionalExpr { "outbound_return = \"$it\""}
+
+            return """
+                select driving_date,station_name,arrival_time
+                from HistoricalArrivals, Stations
+                where HistoricalArrivals.location_x = Stations.location_X and HistoricalArrivals.location_y = Stations.location_y 
+                    and $routeNumberExpr and $outboundReturnExpr and $drivingDateExpr
+                order by arrival_time ASC
+            """
+        }
+    }
+
+    object HistoricalArrivals : Table("HistoricalArrivals") {
         val drivingDate = date("driving_date")
         val departureTime = time("departure_time")
         val drivingWeek = char("driving_week", 3)
@@ -64,29 +81,16 @@ class HistoricalArrivalService(database: Database) : ServiceBase(database, Histo
         }
     }
 
-    suspend fun readHistoricalArrivalsByRouteAndDate(
-        routeNumber: String,
-        drivingDate: LocalDate?
-    ): List<ExposedHistoricalArrival> = dbQuery {
-        val query = HistoricalArrivals.selectAll()
-
-        if (drivingDate != null) {
-            query.where { (HistoricalArrivals.routeNumber eq routeNumber) and (HistoricalArrivals.drivingDate eq drivingDate) }
-        } else {
-            query.where { (HistoricalArrivals.routeNumber eq routeNumber) }
-        }
-
-        query.mapNotNull {
-            ExposedHistoricalArrival(
-                it[HistoricalArrivals.drivingDate],
-                it[HistoricalArrivals.departureTime],
-                it[HistoricalArrivals.drivingWeek],
-                it[HistoricalArrivals.jurisdictionUnit],
-                it[HistoricalArrivals.routeNumber],
-                it[HistoricalArrivals.outboundReturn],
-                it[HistoricalArrivals.locationX],
-                it[HistoricalArrivals.locationY],
-                it[HistoricalArrivals.arrivalTime]
+    suspend fun readHistoricalArrivals(
+        routeNumber: String?,
+        drivingDate: String?,
+        outboundReturn: OutboundReturnType?
+    ): List<ExposedSimpleHistoricalArrival> = dbQuery {
+        queryAndMap(historicalArrivalSelectorBuilder(routeNumber, drivingDate, outboundReturn)) {
+            ExposedSimpleHistoricalArrival(
+                LocalDate.parse(it.getString("driving_date")),
+                it.getString("station_name"),
+                LocalTime.parse(it.getString("arrival_time"))
             )
         }
     }

@@ -1,26 +1,43 @@
 package chaosunity.github.io.plugins.schema
 
-import kotlinx.serialization.Serializable
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-
-@Serializable
-data class ExposedBus(
-    val license: String,
-    val brand: String,
-    val carLength: Float,
-    val lowFloor: Boolean,
-    val wheelChairUse: Int,
-    val numberOfSeats: Int,
-    val typeAorTypeB: Boolean,
-    val manualGearBox: Boolean,
-    val displacement: Int,
-    val maxHorsePower: Int,
-    val maxTorque: Int
-)
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.Table
 
 class BusService(database: Database) : ServiceBase(database, Buses) {
-    object Buses : Table() {
+    companion object {
+        fun simpleBusSelectorBuilder(
+            drivingDate: String?,
+            departureTime: String?,
+            routeNumber: String?,
+            outboundReturn: OutboundReturnType?
+        ): String {
+            val drivingDateExpr = drivingDate.buildConditionalExpr { "driving_date = \"$it\"" }
+            val departureTimeExpr = departureTime.buildConditionalExpr { "departure_time = \"$it\"" }
+            val routeNumberExpr = routeNumber.buildConditionalExpr { "route_number = \"$it\"" }
+            val outboundReturnExpr = outboundReturn.buildConditionalExpr { "outbound_return = \"$it\"" }
+
+            return """
+                select vehicle_license_plate
+                from ActualFrequency
+                where $drivingDateExpr and $departureTimeExpr 
+                    and $routeNumberExpr and $outboundReturnExpr 
+            """
+        }
+
+        fun busSelectorBuilder(
+            license: String?
+        ): String {
+            val licenseExpr = license.buildConditionalExpr { "license = \"$it\"" }
+
+            return """
+                select *
+                from Buses
+                where $licenseExpr
+            """
+        }
+    }
+
+    object Buses : Table("Buses") {
         val license = varchar("license", 8)
         val brand = varchar("brand", 24)
         val carLength = float("car_length")
@@ -36,57 +53,36 @@ class BusService(database: Database) : ServiceBase(database, Buses) {
         override val primaryKey = PrimaryKey(license)
     }
 
-    suspend fun add(bus: ExposedBus): String = dbQuery {
-        Buses.insert {
-            it[license] = bus.license
-            it[brand] = bus.brand
-            it[carLength] = bus.carLength
-            it[lowFloor] = bus.lowFloor
-            it[wheelChairUse] = bus.wheelChairUse
-            it[numberOfSeats] = bus.numberOfSeats
-            it[typeAorTypeB] = bus.typeAorTypeB
-            it[manualGearBox] = bus.manualGearBox
-            it[displacement] = bus.displacement
-            it[maxHorsePower] = bus.maxHorsePower
-            it[maxTorque] = bus.maxTorque
-        }[Buses.license]
+    suspend fun readSimpleBuses(
+        drivingDate: String?,
+        departureTime: String?,
+        routeNumber: String?,
+        outboundReturn: OutboundReturnType?
+    ): List<ExposedSimpleBus> = dbQuery {
+        queryAndMap(simpleBusSelectorBuilder(drivingDate, departureTime, routeNumber, outboundReturn)) {
+            ExposedSimpleBus(
+                it.getString("vehicle_license_plate")
+            )
+        }
     }
 
-    suspend fun read(license: String): ExposedBus? = dbQuery {
-        Buses.selectAll()
-            .where { Buses.license eq license }
-            .map {
-                ExposedBus(
-                    it[Buses.license],
-                    it[Buses.brand],
-                    it[Buses.carLength],
-                    it[Buses.lowFloor],
-                    it[Buses.wheelChairUse],
-                    it[Buses.numberOfSeats],
-                    it[Buses.typeAorTypeB],
-                    it[Buses.manualGearBox],
-                    it[Buses.displacement],
-                    it[Buses.maxHorsePower],
-                    it[Buses.maxTorque]
-                )
-            }
-            .singleOrNull()
-    }
-
-    suspend fun readByRouteNumber(routeNumber: String): List<ExposedBus> = dbQuery {
-        ActualFrequencyService.ActualFrequencies.selectAll()
-            .where { ActualFrequencyService.ActualFrequencies.routeNumber eq routeNumber }
-            .distinctBy { it[ActualFrequencyService.ActualFrequencies.vehicleLicensePlate] }
-            .mapNotNull {
-                val vehicleLicensePlate = it[ActualFrequencyService.ActualFrequencies.vehicleLicensePlate]
-
-                read(vehicleLicensePlate)
-            }
-    }
-
-    suspend fun remove(license: String) {
-        dbQuery {
-            Buses.deleteWhere { Buses.license.eq(license) }
+    suspend fun readBuses(
+        license: String?,
+    ): List<ExposedBus> = dbQuery {
+        queryAndMap(busSelectorBuilder(license)) {
+            ExposedBus(
+                it.getString("license"),
+                it.getString("brand"),
+                it.getFloat("car_length"),
+                it.getBoolean("low_floor"),
+                it.getInt("wheel_chair_use"),
+                it.getInt("number_of_seats"),
+                it.getBoolean("type_a_or_type_b"),
+                it.getBoolean("manual_gear_box"),
+                it.getInt("displacement"),
+                it.getInt("max_horse_power"),
+                it.getInt("max_torque")
+            )
         }
     }
 }

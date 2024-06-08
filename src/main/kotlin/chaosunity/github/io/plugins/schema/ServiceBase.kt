@@ -13,6 +13,9 @@ abstract class ServiceBase(protected val database: Database, private val table: 
         }
     }
 
-    protected suspend fun <T> dbQuery(block: suspend () -> T): T =
-        newSuspendedTransaction(Dispatchers.IO) { block() }
+    protected suspend fun <T> dbQuery(block: suspend Transaction.() -> T): T =
+        newSuspendedTransaction(Dispatchers.IO) {
+            addLogger(StdOutSqlLogger)
+            block()
+        }
 }
