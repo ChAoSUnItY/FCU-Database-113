@@ -153,20 +153,9 @@ fun Application.configureDatabases() {
         }
 
         patch("/passenger") {
-            val passengerName = call.request.queryParameters["passengerName"]
-            val passengerId = call.request.queryParameters["passengerId"]
+            val passenger = call.receive<BodyPassenger>()
 
-            if (passengerName == null) {
-                call.respond(HttpStatusCode.BadRequest, "passengerName is required")
-                return@patch
-            }
-
-            if (passengerId == null) {
-                call.respond(HttpStatusCode.BadRequest, "passengerId is required")
-                return@patch
-            }
-
-            passengerService.updatePassenger(passengerName, passengerId)
+            passengerService.updatePassenger(passenger)
 
             call.respond(HttpStatusCode.OK)
         }
@@ -190,6 +179,82 @@ fun Application.configureDatabases() {
             appointmentFormService.deleteAppointmentForm(appointmentFormId)
 
             call.respond(HttpStatusCode.OK)
+        }
+
+        get("/vmrs") {
+            val drivingDate = call.request.queryParameters["drivingDate"]
+            val routeNumber = call.request.queryParameters["routeNumber"]
+
+            val vmrs = vehicleMaintenanceRecordService.readVMRS(drivingDate, routeNumber)
+
+            call.respond(HttpStatusCode.OK, vmrs)
+        }
+
+        get("/unused_bus") {
+            val drivingDate = call.request.queryParameters["drivingDate"]
+
+            val unusedBuses = busService.readUnusedBuses(drivingDate)
+
+            call.respond(HttpStatusCode.OK, unusedBuses)
+        }
+
+        post("/bus") {
+            val bus = call.receive<BodyBus>()
+
+            busService.addBus(bus)
+
+            call.respond(HttpStatusCode.OK)
+        }
+
+        patch("/bus") {
+            val bus = call.receive<BodyBus>()
+
+            busService.updateBus(bus)
+
+            call.respond(HttpStatusCode.OK)
+        }
+
+        get("/driver") {
+            val drivingDate = call.request.queryParameters["drivingDate"]
+            val routeNumber = call.request.queryParameters["routeNumber"]
+            val departureDate = call.request.queryParameters["departureDate"]
+            val licensePlate = call.request.queryParameters["license"]
+
+            val drivers = driverService.readDrivers(drivingDate, routeNumber, departureDate, licensePlate)
+
+            call.respond(HttpStatusCode.OK, drivers)
+        }
+
+        post("/driver") {
+            val driver = call.receive<BodyDriver>()
+
+            driverService.addDriver(driver)
+
+            call.respond(HttpStatusCode.OK)
+        }
+
+        patch("/driver") {
+            val driver = call.receive<BodyDriver>()
+
+            driverService.addDriver(driver)
+
+            call.respond(HttpStatusCode.OK)
+        }
+
+        get("passenger_phone") {
+            val routeNumber = call.request.queryParameters["routeNumber"]
+            val outboundReturn = call.request.queryParameters["outboundReturn"]
+            val drivingDate = call.request.queryParameters["drivingDate"]
+            val departureDate = call.request.queryParameters["departureDate"]
+
+            val phones = passengerService.readPhoneByAppointmentForm(
+                routeNumber,
+                outboundReturn,
+                drivingDate,
+                departureDate
+            )
+
+            call.respond(HttpStatusCode.OK, phones)
         }
     }
 }

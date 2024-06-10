@@ -85,3 +85,17 @@ data class ExposedPassenger(
     val mail: String,
     val disabilityCategory: Int,
 )
+
+@Serializable
+data class ExposedVMRS(
+    val maintenanceDate: LocalDate,
+    val shop: String,
+    val maintenanceLevel: Int,
+    val personnel: String,
+    val license: String,
+)
+
+@Serializable
+data class ExposedPhone(
+    val phone: String
+)

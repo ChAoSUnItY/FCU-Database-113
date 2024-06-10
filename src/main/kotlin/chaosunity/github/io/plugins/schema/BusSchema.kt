@@ -2,6 +2,8 @@ package chaosunity.github.io.plugins.schema
 
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.update
 
 class BusService(database: Database) : ServiceBase(database, Buses) {
     companion object {
@@ -24,15 +26,26 @@ class BusService(database: Database) : ServiceBase(database, Buses) {
             """
         }
 
-        fun busSelectorBuilder(
-            license: String?
-        ): String {
+        fun busSelectorBuilder(license: String?): String {
             val licenseExpr = license.buildConditionalExpr { "license = \"$it\"" }
 
             return """
                 select *
                 from Buses
                 where $licenseExpr
+            """
+        }
+
+        fun unusedBusSelectorBuilder(drivingDate: String?): String {
+            val drivingDateExpr = drivingDate.buildConditionalExpr { "driving_date = \"$it\"" }
+
+            return """
+                SELECT license
+                FROM bus 
+                WHERE NOT EXISTS( 
+                    SELECT *
+                    FROM actual_frequency 
+                        WHERE $drivingDateExpr AND vehicle_license_plate = license)
             """
         }
     }
@@ -83,6 +96,45 @@ class BusService(database: Database) : ServiceBase(database, Buses) {
                 it.getInt("max_horse_power"),
                 it.getInt("max_torque")
             )
+        }
+    }
+
+    suspend fun readUnusedBuses(drivingDate: String?): List<ExposedSimpleBus> = dbQuery {
+        queryAndMap(unusedBusSelectorBuilder(drivingDate)) {
+            ExposedSimpleBus(
+                it.getString("vehicle_license_plate")
+            )
+        }
+    }
+
+    suspend fun addBus(bus: BodyBus) = dbQuery {
+        Buses.insert {
+            it[license] = bus.license
+            it[brand] = bus.brand
+            it[carLength] = bus.carLength
+            it[lowFloor] = bus.lowFloor
+            it[wheelChairUse] = bus.wheelChairUse
+            it[numberOfSeats] = bus.numberOfSeats
+            it[typeAorTypeB] = bus.typeAorTypeB
+            it[manualGearBox] = bus.manualGearBox
+            it[displacement] = bus.displacement
+            it[maxHorsePower] = bus.maxHorsePower
+            it[maxTorque] = bus.maxTorque
+        }
+    }
+
+    suspend fun updateBus(bus: BodyBus) = dbQuery {
+        Buses.update({ Buses.license eq bus.license }) {
+            it[brand] = bus.brand
+            it[carLength] = bus.carLength
+            it[lowFloor] = bus.lowFloor
+            it[wheelChairUse] = bus.wheelChairUse
+            it[numberOfSeats] = bus.numberOfSeats
+            it[typeAorTypeB] = bus.typeAorTypeB
+            it[manualGearBox] = bus.manualGearBox
+            it[displacement] = bus.displacement
+            it[maxHorsePower] = bus.maxHorsePower
+            it[maxTorque] = bus.maxTorque
         }
     }
 }

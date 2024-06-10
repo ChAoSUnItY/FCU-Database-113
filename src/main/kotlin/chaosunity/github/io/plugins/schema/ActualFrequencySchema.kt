@@ -115,12 +115,12 @@ class ActualFrequencyService(database: Database) : ServiceBase(database, ActualF
     ): List<ExposedActualFrequency> = dbQuery {
         queryAndMap(actualFrequencySelectorBuilder(routeNumber, outboundReturn, drivingWeek)) {
             ExposedActualFrequency(
-                LocalDate.parse(it.getString("driving_date")),
-                LocalTime.parse(it.getString("departure_time")),
+                it.getLocalDate("driving_date"),
+                it.getLocalTime("departure_time"),
                 it.getString("driving_week"),
                 it.getString("jurisdiction_unit"),
                 it.getString("route_number"),
-                OutboundReturnType.valueOf(it.getString("outbound_return")),
+                it.getEnum("outbound_return"),
                 it.getString("driver_id"),
                 it.getString("vehicle_license_plate"),
             )
