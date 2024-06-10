@@ -3,6 +3,7 @@ package chaosunity.github.io.plugins
 import chaosunity.github.io.plugins.schema.*
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.jetbrains.exposed.sql.Database
@@ -126,6 +127,69 @@ fun Application.configureDatabases() {
             )
 
             call.respond(HttpStatusCode.OK, station)
+        }
+
+        get("/appointment") {
+            val passengerID = call.request.queryParameters["passengerID"]
+            val drivingDate = call.request.queryParameters["drivingDate"]
+
+            val appointment = appointmentFormService.readAppointmentForm(passengerID, drivingDate)
+
+            call.respond(HttpStatusCode.OK, appointment)
+        }
+
+        get("/actual_frequency_disability") {
+            val routeNumber = call.request.queryParameters["routeNumber"]
+
+            // TODO: Waiting for complete explain
+        }
+
+        post("/passenger") {
+            val passenger = call.receive<BodyPassenger>()
+
+            passengerService.addPassenger(passenger)
+
+            call.respond(HttpStatusCode.OK)
+        }
+
+        patch("/passenger") {
+            val passengerName = call.request.queryParameters["passengerName"]
+            val passengerId = call.request.queryParameters["passengerId"]
+
+            if (passengerName == null) {
+                call.respond(HttpStatusCode.BadRequest, "passengerName is required")
+                return@patch
+            }
+
+            if (passengerId == null) {
+                call.respond(HttpStatusCode.BadRequest, "passengerId is required")
+                return@patch
+            }
+
+            passengerService.updatePassenger(passengerName, passengerId)
+
+            call.respond(HttpStatusCode.OK)
+        }
+
+        post("/appointment_form") {
+            val appointmentForm = call.receive<BodyAppointmentForm>()
+
+            appointmentFormService.addAppointmentForm(appointmentForm)
+
+            call.respond(HttpStatusCode.OK)
+        }
+
+        delete("/appointment_form") {
+            val appointmentFormId = call.request.queryParameters["appointmentFormId"]
+
+            if (appointmentFormId == null) {
+                call.respond(HttpStatusCode.BadRequest, "appointmentFormId is required")
+                return@delete
+            }
+
+            appointmentFormService.deleteAppointmentForm(appointmentFormId)
+
+            call.respond(HttpStatusCode.OK)
         }
     }
 }

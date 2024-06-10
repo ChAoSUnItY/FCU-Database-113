@@ -63,3 +63,25 @@ data class ExposedSimpleHistoricalArrival(
     val stationName: String,
     val arrivalTime: LocalTime,
 )
+
+@Serializable
+data class ExposedAppointmentForm(
+    val appointmentFormId: String,
+    val specialNeeds: Boolean,
+    val pickUpStation: String,
+    val dropOffStation: String,
+    val drivingDate: LocalDate,
+    val departureTime: LocalTime,
+    val routeNumber: String,
+    val outboundReturn: OutboundReturnType
+)
+
+@Serializable
+data class ExposedPassenger(
+    val passengerId: String,
+    val passengerName: String,
+    val gender: Boolean,
+    val phone: Int,
+    val mail: String,
+    val disabilityCategory: Int,
+)

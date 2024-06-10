@@ -13,9 +13,9 @@ class ActualFrequencyService(database: Database) : ServiceBase(database, ActualF
             outboundReturn: OutboundReturnType?,
             drivingWeek: String?
         ): String {
-            val routeNumberExpr = routeNumber.buildConditionalExpr { "route_number = $it" }
-            val outboundReturnExpr = outboundReturn.buildConditionalExpr { "outbound_return = $it" }
-            val drivingWeekExpr = drivingWeek.buildConditionalExpr { "driving_week = $it" }
+            val routeNumberExpr = routeNumber.buildConditionalExpr { "route_number = \"$it\"" }
+            val outboundReturnExpr = outboundReturn.buildConditionalExpr { "outbound_return = \"$it\"" }
+            val drivingWeekExpr = drivingWeek.buildConditionalExpr { "driving_week = \"$it\"" }
 
             return """
                 select *

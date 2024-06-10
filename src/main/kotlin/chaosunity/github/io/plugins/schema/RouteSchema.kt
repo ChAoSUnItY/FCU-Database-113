@@ -11,8 +11,8 @@ class RouteService(database: Database) : ServiceBase(database, Routes) {
             endStationPattern: String?
         ): String {
             val routeNumberExpr = routeNumber.buildConditionalExpr { "route_number = \"$it\"" }
-            val startStationExpr = startStationPattern.buildConditionalExpr { "station_name like \"$it\"" }
-            val dockStationExpr = dockStationPattern.buildConditionalExpr { "station_name like \"$it\"" }
+            val startStationExpr = startStationPattern.buildConditionalExpr { "start_station.station_name like \"$it\"" }
+            val dockStationExpr = dockStationPattern.buildConditionalExpr { "end_station.station_name like \"$it\"" }
             val endStationExpr = endStationPattern.buildConditionalExpr { "station_name like \"$it\"" }
 
             return """

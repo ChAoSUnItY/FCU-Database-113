@@ -10,7 +10,7 @@ class StationService(database: Database) : ServiceBase(database, Stations) {
             routeNumber: String?,
             outboundReturn: OutboundReturnType?
         ): String {
-            val stationNameExpr = stationName.buildConditionalExpr { "station_name like $it" }
+            val stationNameExpr = stationName.buildConditionalExpr { "station_name like \"$it\"" }
             val routeNumberExpr = routeNumber.buildConditionalExpr { "route_number = \"$it\"" }
             val outboundReturnExpr = outboundReturn.buildConditionalExpr { "outbound_return_type = \"$it\"" }
 
