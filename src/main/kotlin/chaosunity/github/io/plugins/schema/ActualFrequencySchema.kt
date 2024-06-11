@@ -45,6 +45,25 @@ class ActualFrequencyService(database: Database) : ServiceBase(database, ActualF
                     )
             """
         }
+
+        fun actualFrequencyByDisInfoSelectorBuilder(
+            drivingDate: String?,
+            routeNumber: String?,
+            lowFloor: String?,
+            wheelchairUse: String?
+        ): String {
+            val drivingDateExpr = drivingDate.buildConditionalExpr { "driving_date = \"$it\"" }
+            val routeNumberExpr = routeNumber.buildConditionalExpr { "route_number = \"$it\"" }
+            val lowFloorExpr = lowFloor.buildConditionalExpr { "low_floor = \"$it\"" }
+            val wheelchairUseExpr = wheelchairUse.buildConditionalExpr { "wheelchair_use = \"$it\"" }
+
+            return """
+                select *
+                from ActualFrequency, Buses
+                where $drivingDateExpr and $routeNumberExpr and $lowFloorExpr 
+                    and $wheelchairUseExpr and vehicle_license_plate = license
+            """
+        }
     }
 
     object ActualFrequencies : Table("ActualFrequency") {
@@ -114,6 +133,26 @@ class ActualFrequencyService(database: Database) : ServiceBase(database, ActualF
         drivingWeek: String?
     ): List<ExposedActualFrequency> = dbQuery {
         queryAndMap(actualFrequencySelectorBuilder(routeNumber, outboundReturn, drivingWeek)) {
+            ExposedActualFrequency(
+                it.getLocalDate("driving_date"),
+                it.getLocalTime("departure_time"),
+                it.getString("driving_week"),
+                it.getString("jurisdiction_unit"),
+                it.getString("route_number"),
+                it.getEnum("outbound_return"),
+                it.getString("driver_id"),
+                it.getString("vehicle_license_plate"),
+            )
+        }
+    }
+
+    suspend fun readActualFrequenciesByDisabilityInfo(
+        drivingDate: String?,
+        routeNumber: String?,
+        lowFloor: String?,
+        wheelchairUse: String?
+    ): List<ExposedActualFrequency> = dbQuery {
+        queryAndMap(actualFrequencyByDisInfoSelectorBuilder(drivingDate, routeNumber, lowFloor, wheelchairUse)) {
             ExposedActualFrequency(
                 it.getLocalDate("driving_date"),
                 it.getLocalTime("departure_time"),

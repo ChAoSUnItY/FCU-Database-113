@@ -115,18 +115,52 @@ fun Application.configureDatabases() {
             call.respond(HttpStatusCode.OK, actualFrequencies)
         }
 
+        get("/actual_frequency_disability") {
+            val drivingDate = call.request.queryParameters["drivingDate"]
+            val routeNumber = call.request.queryParameters["routeNumber"]
+            val lowFloor = call.request.queryParameters["lowFloor"]
+            val wheelchairUse = call.request.queryParameters["wheelchairUse"]
+
+            val actualFrequencies = actualFrequencyService.readActualFrequenciesByDisabilityInfo(
+                drivingDate,
+                routeNumber,
+                lowFloor,
+                wheelchairUse
+            )
+
+            call.respond(HttpStatusCode.OK, actualFrequencies)
+        }
+
         get("/station") {
             val stationName = call.request.queryParameters["stationName"]
             val routeNumber = call.request.queryParameters["routeNumber"]
             val outboundReturn = call.request.queryParameters["outboundReturn"]
 
-            val station = stationService.readStations(
+            val stations = stationService.readStations(
                 stationName,
                 routeNumber,
                 outboundReturn?.let(OutboundReturnType::valueOf)
             )
 
-            call.respond(HttpStatusCode.OK, station)
+            call.respond(HttpStatusCode.OK, stations)
+        }
+
+        get("/station_disability") {
+            val stationName = call.request.queryParameters["stationName"]
+            val routeNumber = call.request.queryParameters["routeNumber"]
+            val outboundReturn = call.request.queryParameters["outboundReturn"]
+            val accessibility = call.request.queryParameters["accessibility"]
+            val waitingAreaSeat = call.request.queryParameters["waitingAreaSeat"]
+
+            val stations = stationService.readStationsByDisabilityInfo(
+                stationName,
+                routeNumber,
+                outboundReturn?.let(OutboundReturnType::valueOf),
+                accessibility,
+                waitingAreaSeat
+            )
+
+            call.respond(HttpStatusCode.OK, stations)
         }
 
         get("/appointment") {
@@ -136,12 +170,6 @@ fun Application.configureDatabases() {
             val appointment = appointmentFormService.readAppointmentForm(passengerID, drivingDate)
 
             call.respond(HttpStatusCode.OK, appointment)
-        }
-
-        get("/actual_frequency_disability") {
-            val routeNumber = call.request.queryParameters["routeNumber"]
-
-            // TODO: Waiting for complete explain
         }
 
         post("/passenger") {
