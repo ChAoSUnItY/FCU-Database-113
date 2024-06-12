@@ -281,13 +281,13 @@ fun Application.configureDatabases() {
             val routeNumber = call.request.queryParameters["routeNumber"]
             val outboundReturn = call.request.queryParameters["outboundReturn"]
             val drivingDate = call.request.queryParameters["drivingDate"]
-            val departureDate = call.request.queryParameters["departureDate"]
+            val departureTime = call.request.queryParameters["departureTime"]
 
             val phones = passengerService.readPhoneByAppointmentForm(
                 routeNumber,
                 outboundReturn,
                 drivingDate,
-                departureDate
+                departureTime
             )
 
             call.respond(HttpStatusCode.OK, phones)

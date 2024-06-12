@@ -11,12 +11,12 @@ class PassengerService(database: Database) : ServiceBase(database, Passengers) {
             routeNumber: String?,
             outboundReturn: String?,
             drivingDate: String?,
-            departmentTime: String?
+            departureTime: String?
         ): String {
             val routeNumberExpr = routeNumber.buildConditionalExpr { "route_number = \"$it\"" }
             val outboundReturnExpr = outboundReturn.buildConditionalExpr { "outbound_return = \"$it\"" }
             val drivingDateExpr = drivingDate.buildConditionalExpr { "driving_date = \"$it\"" }
-            val departmentTimeExpr = departmentTime.buildConditionalExpr { "department_time = \"$it\"" }
+            val departureTimeExpr = departureTime.buildConditionalExpr { "departure_time = \"$it\"" }
 
             return """
                 select phone
@@ -24,7 +24,7 @@ class PassengerService(database: Database) : ServiceBase(database, Passengers) {
                 where passenger_id in(
                     select passenger_id
                     from AppointmentForms
-                    where $routeNumberExpr and $outboundReturnExpr and $drivingDateExpr and $departmentTimeExpr
+                    where $routeNumberExpr and $outboundReturnExpr and $drivingDateExpr and $departureTimeExpr
                 )
             """
         }
@@ -66,9 +66,9 @@ class PassengerService(database: Database) : ServiceBase(database, Passengers) {
         routeNumber: String?,
         outboundReturn: String?,
         drivingDate: String?,
-        departmentTime: String?
+        departureTime: String?
     ): List<ExposedPhone> = dbQuery {
-        queryAndMap(passengerByAppointmentFormBuilder(routeNumber, outboundReturn, drivingDate, departmentTime)) {
+        queryAndMap(passengerByAppointmentFormBuilder(routeNumber, outboundReturn, drivingDate, departureTime)) {
             ExposedPhone(
                 it.getInt("phone").toString()
             )
