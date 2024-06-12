@@ -18,6 +18,16 @@ class AppointmentFormService(database: Database) : ServiceBase(database, Appoint
                     and drop_off_location_X=e.location_X and drop_off_location_Y=e.location_Y
             """
         }
+
+        fun appointmentFormIdSelectorBuilder(appointmentFormId: String?): String {
+            val appointmentFormIdExpr = appointmentFormId.buildConditionalExpr { "appointment_form_id = \"$it\"" }
+
+            return """
+                select appointment_form_id,special_needs,s.station_name as pick_up_station,e.station_name as drop_off_station,driving_date,departure_time,route_number,outbound_return
+                from AppointmentForms, stations as s, stations as e
+                where $appointmentFormIdExpr and pick_up_location_X=s.location_X and pick_up_location_Y=s.location_Y and  drop_off_location_X=e.location_X and drop_off_location_Y=e.location_Y
+            """
+        }
     }
 
     object AppointmentForms : Table("AppointmentForms") {
@@ -82,6 +92,23 @@ class AppointmentFormService(database: Database) : ServiceBase(database, Appoint
                 )
             }
         }
+
+    suspend fun readAppointmentFormById(appointmentFormId: String?): List<ExposedAppointmentForm> = dbQuery {
+        dbQuery {
+            queryAndMap(appointmentFormIdSelectorBuilder(appointmentFormId)) {
+                ExposedAppointmentForm(
+                    it.getString("appointment_form_id"),
+                    it.getBoolean("special_needs"),
+                    it.getString("pick_up_station"),
+                    it.getString("drop_off_station"),
+                    it.getLocalDate("driving_date"),
+                    it.getLocalTime("departure_time"),
+                    it.getString("route_number"),
+                    it.getEnum("outbound_return")
+                )
+            }
+        }
+    }
 
     suspend fun addAppointmentForm(appointmentForm: BodyAppointmentForm) = dbQuery {
         val pickUpStation = StationService.Stations.selectAll()

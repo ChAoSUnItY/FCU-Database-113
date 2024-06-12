@@ -167,9 +167,17 @@ fun Application.configureDatabases() {
             val passengerID = call.request.queryParameters["passengerID"]
             val drivingDate = call.request.queryParameters["drivingDate"]
 
-            val appointment = appointmentFormService.readAppointmentForm(passengerID, drivingDate)
+            val appointmentForms = appointmentFormService.readAppointmentForm(passengerID, drivingDate)
 
-            call.respond(HttpStatusCode.OK, appointment)
+            call.respond(HttpStatusCode.OK, appointmentForms)
+        }
+
+        get("/appointment_id") {
+            val appointmentFormID = call.request.queryParameters["appointmentFormID"]
+
+            val appointmentForms = appointmentFormService.readAppointmentFormById(appointmentFormID)
+
+            call.respond(HttpStatusCode.OK, appointmentForms)
         }
 
         post("/passenger") {

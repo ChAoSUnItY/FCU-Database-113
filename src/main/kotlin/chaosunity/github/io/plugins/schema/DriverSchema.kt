@@ -27,7 +27,7 @@ class DriverService(database: Database) : ServiceBase(database, Drivers) {
             vehicleLicensePlate: String?
         ): String {
             val driverDateExpr = drivingDate.buildConditionalExpr { "driving_date = \"$it\"" }
-            val routeNumberExpr = routeNumber.buildConditionalExpr { "routing_date = \"$it\"" }
+            val routeNumberExpr = routeNumber.buildConditionalExpr { "route_number = \"$it\"" }
             val departureTimeExpr = departureTime.buildConditionalExpr { "departure_time = \"$it\"" }
             val vehicleLicensePlateExpr = vehicleLicensePlate.buildConditionalExpr { "vehicle_license_plate = \"$it\"" }
 
