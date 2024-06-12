@@ -101,18 +101,18 @@ fun Application.configureDatabases() {
             call.respond(HttpStatusCode.OK, historicalArrivals)
         }
 
-        get("/actual_frequency") {
+        get("/schedule") {
             val routeNumber = call.request.queryParameters["routeNumber"]
             val outboundReturn = call.request.queryParameters["outboundReturn"]
             val drivingWeek = call.request.queryParameters["drivingWeek"]
 
-            val actualFrequencies = actualFrequencyService.readActualFrequencies(
+            val schedules = scheduleService.readSchedules(
                 routeNumber,
                 outboundReturn?.let(OutboundReturnType::valueOf),
                 drivingWeek
             )
 
-            call.respond(HttpStatusCode.OK, actualFrequencies)
+            call.respond(HttpStatusCode.OK, schedules)
         }
 
         get("/actual_frequency_disability") {

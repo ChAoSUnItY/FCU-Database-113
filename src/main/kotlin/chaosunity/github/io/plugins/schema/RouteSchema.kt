@@ -17,21 +17,21 @@ class RouteService(database: Database) : ServiceBase(database, Routes) {
 
             return """
                 select jurisdiction_unit, route_number, outbound_return, start_station.station_name as start_station_name, end_station.station_name as end_station_name
-                from Routes as route, Stations as start_station, Stations as end_station
+                from Routes, Stations as start_station, Stations as end_station
                 where $routeNumberExpr
                 and
                 (jurisdiction_unit,route_number,outbound_return) in (select jurisdiction_unit,route_number,outbound_return 
-                    from Routes as route
+                    from Routes, Stations
                     where starting_point_X = start_station.location_X and starting_point_y = start_station.location_Y and $startStationExpr)
                 and
                 (jurisdiction_unit,route_number,outbound_return) in (select jurisdiction_unit,route_number,outbound_return
-                    from Routes as route
+                    from Routes, Stations
                     where destination_x = end_station.location_X and destination_y = end_station.location_Y and $endStationExpr)
                 and exists 
                 (select *
                     from Docks as dock, Stations as station
                     where dock.location_X=station.location_X and dock.location_y=station.location_y and $dockStationExpr and 
-                    dock.jurisdiction_unit=route.jurisdiction_unit and dock.route_number=route.route_number and dock.outbound_return=route.outbound_return)
+                    dock.jurisdiction_unit=Routes.jurisdiction_unit and dock.route_number=Routes.route_number and dock.outbound_return=Routes.outbound_return)
                     and start_station.location_X=starting_point_X and start_station.location_y=starting_point_y and end_station.location_X=destination_x and end_station.location_Y=destination_y
             """
         }

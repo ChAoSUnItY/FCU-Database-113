@@ -41,10 +41,10 @@ class BusService(database: Database) : ServiceBase(database, Buses) {
 
             return """
                 SELECT license
-                FROM bus 
+                FROM Buses
                 WHERE NOT EXISTS( 
                     SELECT *
-                    FROM actual_frequency 
+                    FROM ActualFrequency
                         WHERE $drivingDateExpr AND vehicle_license_plate = license)
             """
         }
@@ -102,7 +102,7 @@ class BusService(database: Database) : ServiceBase(database, Buses) {
     suspend fun readUnusedBuses(drivingDate: String?): List<ExposedSimpleBus> = dbQuery {
         queryAndMap(unusedBusSelectorBuilder(drivingDate)) {
             ExposedSimpleBus(
-                it.getString("vehicle_license_plate")
+                it.getString("license")
             )
         }
     }

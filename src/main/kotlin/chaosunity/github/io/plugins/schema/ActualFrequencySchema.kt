@@ -1,29 +1,12 @@
 package chaosunity.github.io.plugins.schema
 
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalTime
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.kotlin.datetime.date
 import org.jetbrains.exposed.sql.kotlin.datetime.time
 
 class ActualFrequencyService(database: Database) : ServiceBase(database, ActualFrequencies) {
     companion object {
-        fun actualFrequencySelectorBuilder(
-            routeNumber: String?,
-            outboundReturn: OutboundReturnType?,
-            drivingWeek: String?
-        ): String {
-            val routeNumberExpr = routeNumber.buildConditionalExpr { "route_number = \"$it\"" }
-            val outboundReturnExpr = outboundReturn.buildConditionalExpr { "outbound_return = \"$it\"" }
-            val drivingWeekExpr = drivingWeek.buildConditionalExpr { "driving_week = \"$it\"" }
-
-            return """
-                select *
-                from ActualFrequency
-                where $routeNumberExpr and $outboundReturnExpr and $drivingWeekExpr
-            """
-        }
-
         fun busByActualFrequencySelectorBuilder(
             drivingDate: String?,
             departureTime: String?,
@@ -123,25 +106,6 @@ class ActualFrequencyService(database: Database) : ServiceBase(database, ActualF
                 it.getInt("displacement"),
                 it.getInt("max_horse_power"),
                 it.getInt("max_torque")
-            )
-        }
-    }
-
-    suspend fun readActualFrequencies(
-        routeNumber: String?,
-        outboundReturn: OutboundReturnType?,
-        drivingWeek: String?
-    ): List<ExposedActualFrequency> = dbQuery {
-        queryAndMap(actualFrequencySelectorBuilder(routeNumber, outboundReturn, drivingWeek)) {
-            ExposedActualFrequency(
-                it.getLocalDate("driving_date"),
-                it.getLocalTime("departure_time"),
-                it.getString("driving_week"),
-                it.getString("jurisdiction_unit"),
-                it.getString("route_number"),
-                it.getEnum("outbound_return"),
-                it.getString("driver_id"),
-                it.getString("vehicle_license_plate"),
             )
         }
     }

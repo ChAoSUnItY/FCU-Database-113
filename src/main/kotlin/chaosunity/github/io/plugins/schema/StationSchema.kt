@@ -17,17 +17,16 @@ class StationService(database: Database) : ServiceBase(database, Stations) {
             return """
                 select station_name, road_name
                 from stations
-                where exists
-                    (select *
-                    from routes
+                where $stationNameExpr and (exists
+                (select *
+                    from Routes
                     where $routeNumberExpr and $outboundReturnExpr and((starting_point_X=location_X and starting_point_y=location_Y) or (destination_x=location_X and destination_y=location_Y) )
-                    )
-                or (location_x,location_y)in
-                    (	select location_X,location_Y
-                        from docks
-                        where $routeNumberExpr and $outboundReturnExpr
-                    )
-                and $stationNameExpr
+                )
+                or (location_x, location_y)in
+                (select location_X, location_Y
+                    from Docks
+                    where $routeNumberExpr and $outboundReturnExpr
+                ))
             """
         }
 

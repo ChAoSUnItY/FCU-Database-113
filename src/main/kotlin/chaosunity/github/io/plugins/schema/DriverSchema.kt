@@ -33,10 +33,10 @@ class DriverService(database: Database) : ServiceBase(database, Drivers) {
 
             return """
                 select *
-                from dirver
+                from Drivers
                 where Driver_id in(
                     select Driver_ID
-                    from actual_frequency
+                    from ActualFrequency
                     where $driverDateExpr and $routeNumberExpr and $departureTimeExpr and $vehicleLicensePlateExpr
                 )
             """

@@ -99,3 +99,12 @@ data class ExposedVMRS(
 data class ExposedPhone(
     val phone: String
 )
+
+@Serializable
+data class ExposedSchedule(
+    val departureTime: LocalTime,
+    val drivingWeek: String,
+    val jurisdictionUnit: String,
+    val routeNumber: String,
+    val outboundReturn: OutboundReturnType,
+)
