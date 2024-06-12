@@ -15,7 +15,7 @@ data class ExposedDriver(
     val gender: String,
     val violationRecord: Int,
     val driverLicense: String,
-    val driverLicenseEd: LocalDate,
+    val driverLicenseEd: String,
 )
 
 class DriverService(database: Database) : ServiceBase(database, Drivers) {
@@ -68,7 +68,7 @@ class DriverService(database: Database) : ServiceBase(database, Drivers) {
                     it.getString("gender"),
                     it.getInt("violation_record"),
                     it.getString("driver_license"),
-                    it.getLocalDate("driverLicenseEd")
+                    it.getString("driverLicenseEd")
                 )
             }
         }

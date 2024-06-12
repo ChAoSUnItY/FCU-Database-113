@@ -12,7 +12,7 @@ class StationService(database: Database) : ServiceBase(database, Stations) {
         ): String {
             val stationNameExpr = stationName.buildConditionalExpr { "station_name like \"$it\"" }
             val routeNumberExpr = routeNumber.buildConditionalExpr { "route_number = \"$it\"" }
-            val outboundReturnExpr = outboundReturn.buildConditionalExpr { "outbound_return_type = \"$it\"" }
+            val outboundReturnExpr = outboundReturn.buildConditionalExpr { "outbound_return = \"$it\"" }
 
             return """
                 select station_name, road_name
@@ -39,7 +39,7 @@ class StationService(database: Database) : ServiceBase(database, Stations) {
         ): String {
             val stationNameExpr = stationName.buildConditionalExpr { "station_name like \"$it\"" }
             val routeNumberExpr = routeNumber.buildConditionalExpr { "route_number = \"$it\"" }
-            val outboundReturnExpr = outboundReturn.buildConditionalExpr { "outbound_return_type = \"$it\"" }
+            val outboundReturnExpr = outboundReturn.buildConditionalExpr { "outbound_return = \"$it\"" }
             val accessibilityExpr = accessibility.buildConditionalExpr { "accessibility = \"$it\"" }
             val waitingAreaSeatExpr = waitingAreaSeat.buildConditionalExpr { "waiting_area_seat = \"$it\"" }
 
